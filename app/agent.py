@@ -1,5 +1,9 @@
 import operator
+import os
 from typing import TypedDict, List, Literal, Annotated
+
+from dotenv import load_dotenv
+load_dotenv()
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
@@ -7,16 +11,10 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import ToolNode
 
-import os
-from dotenv import load_dotenv
-load_dotenv()
-
-from database import get_conn, normalizar, guardar_feedback, MINIMO_DEFAULT
+from database import get_conn, normalizar, MINIMO_DEFAULT
 from prompts import construir_system_prompt
-from tools import consultar_producto, listar_productos_criticos, modificar_stock, obtener_inventario_completo
+from tools import TOOLS, llm
 
-TOOLS        = [consultar_producto, listar_productos_criticos, modificar_stock, obtener_inventario_completo]
-llm          = ChatGoogleGenerativeAI(model="gemini-3-flash-preview", temperature=1.0)
 llm_con_tools = llm.bind_tools(TOOLS)
 
 
