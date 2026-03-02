@@ -5,8 +5,9 @@ import remarkGfm from "remark-gfm"
 import {
   Send, RefreshCw, Package, AlertTriangle, BarChart2,
   TrendingDown, DollarSign, Wrench, FlaskConical,
-  Flame, Settings, Box, Wifi, WifiOff, Clock
+  Flame, Settings, Box, Wifi, WifiOff, Clock, Menu, X
 } from "lucide-react"
+import logo from "./assets/logo.png"
 import "./App.css"
 
 interface Message {
@@ -18,12 +19,12 @@ interface Message {
 const API_URL = "http://localhost:8000"
 
 const EJEMPLOS = [
-  { icon: Package,       text: "¿Hay stock de elaion f50 5w-40 4l?" },
-  { icon: AlertTriangle, text: "¿Qué productos están agotados?" },
-  { icon: BarChart2,     text: "Mostrar alertas de stock" },
-  { icon: DollarSign,    text: "¿Cuánto vale en total mi inventario?" },
-  { icon: TrendingDown,  text: "¿Qué productos críticos debería reponer primero?" },
-  { icon: DollarSign,    text: "Dame los 5 productos más caros" },
+  { icon: Package,       text: "¿Qué stock tengo de elaion f50 5w-40 4l?" },
+  { icon: AlertTriangle, text: "¿Qué productos se me están por agotar?" },
+  { icon: BarChart2,     text: "Dame un resumen del estado del inventario" },
+  { icon: DollarSign,    text: "¿Cuánto capital tengo inmovilizado en stock?" },
+  { icon: TrendingDown,  text: "¿Qué debería reponer con urgencia esta semana?" },
+  { icon: DollarSign,    text: "¿Cuáles son mis productos de mayor valor?" },
 ]
 
 const LINEAS = [
@@ -35,13 +36,14 @@ const LINEAS = [
 ]
 
 export default function App() {
-  const [messages, setMessages]   = useState<Message[]>([])
-  const [input, setInput]         = useState("")
-  const [loading, setLoading]     = useState(false)
-  const [sessionId, setSessionId] = useState<string | null>(null)
-  const [online, setOnline]       = useState(false)
-  const bottomRef                 = useRef<HTMLDivElement>(null)
-  const textareaRef               = useRef<HTMLTextAreaElement>(null)
+  const [messages, setMessages]     = useState<Message[]>([])
+  const [input, setInput]           = useState("")
+  const [loading, setLoading]       = useState(false)
+  const [sessionId, setSessionId]   = useState<string | null>(null)
+  const [online, setOnline]         = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const bottomRef                   = useRef<HTMLDivElement>(null)
+  const textareaRef                 = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     axios.get(`${API_URL}/health`)
@@ -66,12 +68,13 @@ export default function App() {
     setMessages(prev => [...prev, { role: "user", content: msg, timestamp: new Date() }])
     setInput("")
     setLoading(true)
+    setSidebarOpen(false)
     try {
       const res = await axios.post(`${API_URL}/chat`, { message: msg, session_id: sessionId })
       setSessionId(res.data.session_id)
       setMessages(prev => [...prev, { role: "assistant", content: res.data.response, timestamp: new Date() }])
     } catch {
-      setMessages(prev => [...prev, { role: "assistant", content: "⚠️ He encontrado un error al conectar con el servidor. Verificá que la API esté corriendo en el puerto 8000.", timestamp: new Date() }])
+      setMessages(prev => [...prev, { role: "assistant", content: "⚠️ Error al conectar con el servidor.", timestamp: new Date() }])
     } finally {
       setLoading(false)
     }
@@ -87,18 +90,16 @@ export default function App() {
 
   return (
     <div className="shell">
-      <aside className="sidebar">
+      {/* overlay mobile */}
+      {sidebarOpen && <div className="overlay" onClick={() => setSidebarOpen(false)} />}
+
+      {/* ── SIDEBAR ── */}
+      <aside className={`sidebar ${sidebarOpen ? "sidebar--open" : ""}`}>
         <div className="sidebar-top">
-          <div className="brand">
-            <div className="brand-logo">🛢️</div>
-            <div>
-              <div className="brand-name">LOGIS</div>
-              <div className="brand-tagline">Inteligencia operativa en cada movimiento.</div>
-            </div>
-          </div>
+          <img src={logo} alt="Logis" className="brand-logo" />
           <div className={`status-pill ${online ? "status-pill--online" : ""}`}>
             {online ? <Wifi size={11} /> : <WifiOff size={11} />}
-            <span>{online ? "API activa" : "Sin conexión"}</span>
+            <span>{online ? "Sistema Activo" : "Sin conexión"}</span>
           </div>
         </div>
 
@@ -138,17 +139,22 @@ export default function App() {
         </div>
       </aside>
 
+      {/* ── MAIN ── */}
       <main className="main">
         <header className="topbar">
-          <div>
-            <div className="topbar-title">Asistente de Stock & Precios</div>
-            <div className="topbar-sub">
-              {messages.length === 0
-                ? "Listo para recibir consultas"
-                : `He identificado ${messages.filter(m => m.role === "assistant").length} respuesta${messages.filter(m => m.role === "assistant").length !== 1 ? "s" : ""} en esta sesión`}
+          <div className="topbar-left">
+            <button className="menu-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>
+              {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
+            <div>
+              <div className="topbar-title">Asistente de Stock & Precios</div>
+              <div className="topbar-sub">
+                {messages.length === 0
+                  ? "Listo para recibir consultas"
+                  : `${messages.filter(m => m.role === "assistant").length} respuesta${messages.filter(m => m.role === "assistant").length !== 1 ? "s" : ""} en esta sesión`}
+              </div>
             </div>
           </div>
-          <div className="model-badge">Gemini · LangGraph · SQLite</div>
         </header>
 
         <div className="messages">
@@ -173,7 +179,7 @@ export default function App() {
               <div key={i} className={`msg msg--${msg.role}`}>
                 <div className="msg-header">
                   <div className={`msg-avatar msg-avatar--${msg.role}`}>
-                    {msg.role === "user" ? "👤" : "🤖"}
+                    {msg.role === "user" ? "👤" : <img src={logo} alt="Logis" className="avatar-logo" />}
                   </div>
                   <span className="msg-author">{msg.role === "user" ? "Vos" : "Logis"}</span>
                   <span className="msg-time">{formatTime(msg.timestamp)}</span>
@@ -188,7 +194,9 @@ export default function App() {
           {loading && (
             <div className="msg msg--assistant">
               <div className="msg-header">
-                <div className="msg-avatar msg-avatar--assistant">🤖</div>
+                <div className="msg-avatar msg-avatar--assistant">
+                  <img src={logo} alt="Logis" className="avatar-logo" />
+                </div>
                 <span className="msg-author">Logis</span>
                 <span className="msg-time">Consultando inventario...</span>
               </div>
@@ -212,10 +220,10 @@ export default function App() {
               rows={1}
             />
             <div className="input-footer">
-              <span className="input-hint">Enter para enviar · Shift+Enter nueva línea</span>
+              <span className="input-hint">Enter · Shift+Enter nueva línea</span>
               <button className="send-btn" onClick={() => sendMessage()} disabled={loading || !input.trim()}>
                 <Send size={14} />
-                <span>Consultar</span>
+                <span className="send-label">Consultar</span>
               </button>
             </div>
           </div>
