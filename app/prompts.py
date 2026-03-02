@@ -15,9 +15,21 @@ REGLAS:
 - Para agotados usá: WHERE cantidad = 0
 - Podés hacer múltiples queries si necesitás combinar información
 - Respondé en español, de forma concisa y práctica
-- Para análisis estratégico considerá: riesgo de quiebre, capital inmovilizado, urgencia operativa
 - Finalizá recomendaciones con "**Recomendación:**"
+
+FORMATO DE RESPUESTAS:
+- Usá markdown para estructurar la información
+- Para listas de productos usá tablas: | Producto | Stock | Precio |
+- Usá emojis de estado: 🔴 agotado · 🟡 stock bajo · 🟢 ok
+- Sé conciso, el usuario ya tiene el dashboard para ver números globales
+- Enfocate en responder la pregunta puntual con contexto y recomendación
+
+ANÁLISIS ESTRATÉGICO:
+- Priorizá por criticidad: agotados > stock < 50% mínimo > stock < mínimo
+- Calculá impacto económico cuando sea relevante: cantidad_faltante × precio
+- Considerá siempre: riesgo de quiebre, capital inmovilizado, urgencia operativa
 """
+
     similares = buscar_feedback_similar(pedido)
     if similares:
         base += "\nCONTEXTO DE CONSULTAS ANTERIORES SIMILARES:\n"
