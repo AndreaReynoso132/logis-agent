@@ -5,7 +5,7 @@ import remarkGfm from "remark-gfm"
 import {
   Send, RefreshCw, Package, AlertTriangle, BarChart2,
   TrendingDown, DollarSign, Wrench, FlaskConical,
-  Flame, Settings, Box, Wifi, WifiOff, Clock, Menu, X
+  Flame, Settings, Box, Wifi, WifiOff, Clock, Menu, X, Bot, User
 } from "lucide-react"
 import logo from "./assets/logo.png"
 import "./App.css"
@@ -36,14 +36,14 @@ const LINEAS = [
 ]
 
 export default function App() {
-  const [messages, setMessages]     = useState<Message[]>([])
-  const [input, setInput]           = useState("")
-  const [loading, setLoading]       = useState(false)
-  const [sessionId, setSessionId]   = useState<string | null>(null)
-  const [online, setOnline]         = useState(false)
+  const [messages, setMessages]       = useState<Message[]>([])
+  const [input, setInput]             = useState("")
+  const [loading, setLoading]         = useState(false)
+  const [sessionId, setSessionId]     = useState<string | null>(null)
+  const [online, setOnline]           = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const bottomRef                   = useRef<HTMLDivElement>(null)
-  const textareaRef                 = useRef<HTMLTextAreaElement>(null)
+  const bottomRef                     = useRef<HTMLDivElement>(null)
+  const textareaRef                   = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     axios.get(`${API_URL}/health`)
@@ -90,7 +90,6 @@ export default function App() {
 
   return (
     <div className="shell">
-      {/* overlay mobile */}
       {sidebarOpen && <div className="overlay" onClick={() => setSidebarOpen(false)} />}
 
       {/* ── SIDEBAR ── */}
@@ -179,9 +178,11 @@ export default function App() {
               <div key={i} className={`msg msg--${msg.role}`}>
                 <div className="msg-header">
                   <div className={`msg-avatar msg-avatar--${msg.role}`}>
-                    {msg.role === "user" ? "👤" : <img src={logo} alt="Logis" className="avatar-logo" />}
+                    {msg.role === "user"
+                      ? <User size={14} className="avatar-icon avatar-icon--user" />
+                      : <Bot  size={14} className="avatar-icon avatar-icon--bot" />}
                   </div>
-                  <span className="msg-author">{msg.role === "user" ? "Vos" : "Logis"}</span>
+                  <span className="msg-author">{msg.role === "user" ? "Analista" : "Logis"}</span>
                   <span className="msg-time">{formatTime(msg.timestamp)}</span>
                 </div>
                 <div className={`msg-bubble msg-bubble--${msg.role}`}>
@@ -195,7 +196,7 @@ export default function App() {
             <div className="msg msg--assistant">
               <div className="msg-header">
                 <div className="msg-avatar msg-avatar--assistant">
-                  <img src={logo} alt="Logis" className="avatar-logo" />
+                  <Bot size={14} className="avatar-icon avatar-icon--bot" />
                 </div>
                 <span className="msg-author">Logis</span>
                 <span className="msg-time">Consultando inventario...</span>
